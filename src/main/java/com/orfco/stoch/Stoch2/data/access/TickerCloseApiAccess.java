@@ -20,12 +20,13 @@ import com.orfco.stoch.Stoch2.model.TickerCloseData;
 public class TickerCloseApiAccess {
 	private static Logger logger = LoggerFactory.getLogger(TickerCloseApiAccess.class);
 	
-	public List<CloseData> getCloseData(String _symbol, LocalDate startDate, LocalDate endDate) throws IOException {
+	public List<CloseData> getCloseData(String _symbol, LocalDate startDate, LocalDate endDate)
+			throws IOException {
 		// 1. Create correct URL...
 		var startDateStr = startDate == null ? "2020-01-01" : startDate.toString();
 		var endDateStr = "&endDate=" + (endDate == null ? LocalDate.now().toString() : endDate.toString());
 		var url = "https://api.tiingo.com/tiingo/daily/" + _symbol
-		    + "/prices?startDate=" + startDateStr + endDateStr + "&token=b77f6f9bae3b3e731697c72010d38bf5f9df8a95";
+				+ "/prices?startDate=" + startDateStr + endDateStr + "&token=b77f6f9bae3b3e731697c72010d38bf5f9df8a95";
 
 		List<CloseData> closes = new ArrayList<CloseData>();
 		HttpResponse<String> response = null;
