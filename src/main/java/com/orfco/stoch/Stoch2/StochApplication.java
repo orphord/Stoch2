@@ -30,7 +30,6 @@ public class StochApplication {
 	// command line args ('--name=whatever') or application properties
 
 	public static void main(String[] args) throws Exception {
-		System.out.print("00000000000000");
 		var appContext = SpringApplication.run(StochApplication.class, args);
 		var backtester = appContext.getBean(Backtester.class);
 		backtester.run();

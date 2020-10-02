@@ -74,7 +74,7 @@ public class TickerCloseDAO {
 	};
 
 		TickerCloseData closeData = jdbcTemplate.query(preparedStatementCreator, new TickerCloseDataExtractor()); 
-
+		closeData.setTicker(_symbol);
 		return closeData;
 	}
 

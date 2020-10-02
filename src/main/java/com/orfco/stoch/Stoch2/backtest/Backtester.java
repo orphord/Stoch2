@@ -46,7 +46,7 @@ public class Backtester {
 		List<String> symbols = getSymbols();
 
 		var tickerCloseData = dataService.initiateTickerCloseData(java.util.Arrays.asList("gs"));
-		logger.info("TickerCloseData: {}:", tickerCloseData);
+	//	logger.info("TickerCloseData: {}:", tickerCloseData);
 		// 5. Pull data from database
 
 		// 6. Do analysis

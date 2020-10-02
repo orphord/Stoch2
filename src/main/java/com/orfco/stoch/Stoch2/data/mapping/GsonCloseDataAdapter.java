@@ -20,7 +20,6 @@ import com.google.gson.JsonParser;
 
 public class GsonCloseDataAdapter extends TypeAdapter<List<CloseData>> {
 
-	private static Logger logger = LoggerFactory.getLogger(GsonCloseDataAdapter.class);
 	public static final String PRICES = "prices";
 	public static final String CLOSEDATE = "date";
 	public static final String OPENPRICE = "open";
@@ -38,18 +37,15 @@ public class GsonCloseDataAdapter extends TypeAdapter<List<CloseData>> {
 
 	@Override
 	public List<CloseData> read(JsonReader reader) throws IOException {
-		logger.info("read in GsonCloseDataAdapter called.");
 		List<CloseData> closeData = new ArrayList<CloseData>();
 
 		JsonElement root = JsonParser.parseReader(reader);
 		JsonArray priceArray = root.getAsJsonArray();
-//		var entries = priceArray.entrySet();
-//		for(var entry : entries) {
+
 		for(var close : priceArray) {
 			var temp = buildCloseDataFromJsonElement(close);
 			closeData.add(temp);
 		}
-
 
 		return closeData;
 	}

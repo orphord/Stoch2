@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,14 +62,13 @@ public class TickerCloseDataService {
 		executorService = Executors.newFixedThreadPool(startEndDatePairs.size());
 		
 		// Mission here is to acquire CloseData within the date range *that we don't already have in the DB*
-		// and add it to teh DB
+		// and add it to the DB
 		var callables = new HashSet<TickerCloseCallable>();
-		for(var startEndPair : startEndDatePairs) {
-			callables.add(new TickerCloseCallable(_symbol, startEndPair.startDate, startEndPair.endDate));
-		}
+		startEndDatePairs
+			.stream()
+			.forEach(t -> callables.add(new TickerCloseCallable(_symbol, t.startDate, t.endDate)));
 
 		executorService.invokeAll(callables);
-
 		executorService.shutdown();
 	}
 
@@ -94,16 +94,18 @@ public class TickerCloseDataService {
 		// year for which we want data -- either the last date for which we already have close
 		// data in the database *or* the beginning of the "epoch" (the longest ago date for which
 		// we are interested in close data)
-		for (int testYear = today.getYear(); start.getYear() <= testYear; testYear--) {
-			LocalDate yearBeginDate = LocalDate.of(testYear, 1, 1);
-			LocalDate yearEndDate = LocalDate.of(testYear, 12, 31);
-			if (testYear == today.getYear())
-				yearEndDate = today;
-			if (testYear == start.getYear())
-				yearBeginDate = start.plusDays(1);
+		IntStream
+			.rangeClosed(start.getYear(),today.getYear())
+			.forEach(year -> {
+				LocalDate yearBeginDate = LocalDate.of(year, 1, 1);
+				LocalDate yearEndDate = LocalDate.of(year, 12, 31);
+				if (year == today.getYear())
+					yearEndDate = today;
+				if (year == start.getYear())
+					yearBeginDate = start.plusDays(1);
 
-			datePairList.add(new StartEndDatePair(yearBeginDate, yearEndDate));
-		}
+				datePairList.add(new StartEndDatePair(yearBeginDate, yearEndDate));
+			});
 
 		return datePairList;
 	}
@@ -121,7 +123,6 @@ public class TickerCloseDataService {
 
 		@Override
 		public List<CloseData> call() throws Exception {
-			logger.info("TickerCloseCallable call() called.");
 			var closeData = tickerCloseApi.getCloseData(symbol, startDate, endDate);
 			dao.insertTickerCloseToDatabase(closeData, symbol);
 			return closeData;
@@ -135,11 +136,6 @@ public class TickerCloseDataService {
 		private StartEndDatePair(LocalDate _start, LocalDate _end) {
 			setStartDate(_start);
 			setEndDate(_end);
-		}
-
-		public String toString() {
-			return new StringBuffer("\nStartEndDatePair: {").append("\n\tStartDate: ").append(startDate)
-			    .append("\n\tEndDate: ").append(endDate).append("\n}").toString();
 		}
 
 		/**
@@ -168,6 +164,10 @@ public class TickerCloseDataService {
 		 */
 		public void setEndDate(LocalDate endDate) {
 			this.endDate = endDate;
+		}
+		
+		public String toString() {
+			return new StringBuffer("Start: " + startDate.toString() + "; End: " + endDate.toString()).toString();
 		}
 	}
 }
