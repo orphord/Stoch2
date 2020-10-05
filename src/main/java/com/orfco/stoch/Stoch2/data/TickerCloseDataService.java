@@ -9,8 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +17,11 @@ import com.orfco.stoch.Stoch2.data.access.TickerCloseDAO;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
-@Service
-public class TickerCloseDataService {
-	private static Logger logger = LoggerFactory.getLogger(TickerCloseDataService.class);
+import lombok.extern.slf4j.Slf4j;
 
+@Service
+@Slf4j
+public class TickerCloseDataService {
 	private ExecutorService executorService;
 
 	private String epochStartStr = "2019-04-20";
@@ -39,6 +38,7 @@ public class TickerCloseDataService {
 	}
 
 	public TickerCloseData initiateTickerCloseData(List<String> symbols) throws Exception {
+		log.info("initiateTickerCloseData called.");
 		// 2. check if what earliest date range we need data for form database
 		var symbol = "gs";
 		var latestCloseInDatabase = dao.getLatestForSymbol(symbol);
@@ -59,6 +59,7 @@ public class TickerCloseDataService {
 
 	private void doThreadedDataWork(String _symbol, List<StartEndDatePair> startEndDatePairs)
 			throws Exception {
+		log.info("doThreadedDataWork called.");
 		executorService = Executors.newFixedThreadPool(startEndDatePairs.size());
 		
 		// Mission here is to acquire CloseData within the date range *that we don't already have in the DB*
@@ -73,6 +74,7 @@ public class TickerCloseDataService {
 	}
 
 	private List<StartEndDatePair> determineStartEndDates(LocalDate latestCloseInDatabase) {
+		log.info("determineStartEndDates called.");
 		var start = latestCloseInDatabase == null ? epochStart : latestCloseInDatabase;
 		var today = LocalDate.now();
 
@@ -123,6 +125,7 @@ public class TickerCloseDataService {
 
 		@Override
 		public List<CloseData> call() throws Exception {
+			log.info("thread to get and insert to database.");
 			var closeData = tickerCloseApi.getCloseData(symbol, startDate, endDate);
 			dao.insertTickerCloseToDatabase(closeData, symbol);
 			return closeData;

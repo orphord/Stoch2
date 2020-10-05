@@ -10,18 +10,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.orfco.stoch.Stoch2.data.TickerCloseDataService;
 
+import lombok.extern.slf4j.Slf4j;
+
 
 @Service
+@Slf4j
 public class Backtester {
-	private static Logger logger = LoggerFactory.getLogger(Backtester.class);
-
+	
 	@Autowired
 	private TickerCloseDataService dataService;
 	
@@ -41,7 +41,7 @@ public class Backtester {
 	}
 
 	public void run() throws Exception {
-		logger.error("1111111111111");
+		log.error("1111111111111");
 		// 1. Get symbols from properties file
 		List<String> symbols = getSymbols();
 
@@ -54,20 +54,19 @@ public class Backtester {
 	}
 
 	private List<String> getSymbols() {
-		logger.error("222222222222222222");
+		log.error("222222222222222222");
 		URL fileUrl = ClassLoader.getSystemResource("backtest.properties");
 		List<String> symbols = new ArrayList<String>();
 		try {
 			var backTestProps = new Properties();
 			backTestProps.load(new FileInputStream(new File(fileUrl.getFile())));
-
 			symbols = Arrays.asList(backTestProps.getProperty("symbols").split(","));
 
 		} catch (FileNotFoundException ex) {
-			logger.error("The properties file was not found.", ex);
+			log.error("The properties file was not found.", ex);
 		} catch (IOException ex) {
 			// TODO Auto-generated catch block
-			logger.error("There was a problem doing io stuff: ", ex);
+			log.error("There was a problem doing io stuff: ", ex);
 		}
 		return symbols;
 	}

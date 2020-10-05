@@ -18,11 +18,12 @@ package com.orfco.stoch.Stoch2;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+import lombok.extern.slf4j.Slf4j;
 
 import com.orfco.stoch.Stoch2.backtest.Backtester;
 
 @SpringBootApplication
+@Slf4j
 public class StochApplication {
 
 	// Simple example shows how a command line spring application can execute an
@@ -33,6 +34,7 @@ public class StochApplication {
 		var appContext = SpringApplication.run(StochApplication.class, args);
 		var backtester = appContext.getBean(Backtester.class);
 		backtester.run();
+		log.error("Done.");
 	}
 
 }
