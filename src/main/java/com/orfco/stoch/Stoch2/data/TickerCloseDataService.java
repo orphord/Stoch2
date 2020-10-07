@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.orfco.stoch.Stoch2.data.access.TickerCloseApiAccess;
 import com.orfco.stoch.Stoch2.data.access.TickerCloseDAO;
 import com.orfco.stoch.Stoch2.model.CloseData;
+import com.orfco.stoch.Stoch2.model.StartEndDatePair;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +68,7 @@ public class TickerCloseDataService {
 		var callables = new HashSet<TickerCloseCallable>();
 		startEndDatePairs
 			.stream()
-			.forEach(t -> callables.add(new TickerCloseCallable(_symbol, t.startDate, t.endDate)));
+			.forEach(t -> callables.add(new TickerCloseCallable(_symbol, t.getStartDate(), t.getEndDate())));
 
 		executorService.invokeAll(callables);
 		executorService.shutdown();
@@ -88,7 +89,7 @@ public class TickerCloseDataService {
 		// We know that today is different that the latest close so we should add the
 		// most recent year to the
 		if (today.getYear() == start.getYear()) {
-			datePairList.add(new StartEndDatePair(start.plusDays(1), today));
+			datePairList.add(StartEndDatePair.build(start.plusDays(1), today));
 			return datePairList;
 		}
 
@@ -106,7 +107,7 @@ public class TickerCloseDataService {
 				if (year == start.getYear())
 					yearBeginDate = start.plusDays(1);
 
-				datePairList.add(new StartEndDatePair(yearBeginDate, yearEndDate));
+				datePairList.add(StartEndDatePair.build(yearBeginDate, yearEndDate));
 			});
 
 		return datePairList;
@@ -132,45 +133,4 @@ public class TickerCloseDataService {
 		}
 	}
 
-	class StartEndDatePair {
-		private LocalDate startDate;
-		private LocalDate endDate;
-
-		private StartEndDatePair(LocalDate _start, LocalDate _end) {
-			setStartDate(_start);
-			setEndDate(_end);
-		}
-
-		/**
-		 * @return the startDate
-		 */
-		public LocalDate getStartDate() {
-			return startDate;
-		}
-
-		/**
-		 * @param _startDate the startDate to set
-		 */
-		public void setStartDate(LocalDate _startDate) {
-			this.startDate = _startDate;
-		}
-
-		/**
-		 * @return the endDate
-		 */
-		public LocalDate getEndDate() {
-			return endDate;
-		}
-
-		/**
-		 * @param endDate the endDate to set
-		 */
-		public void setEndDate(LocalDate endDate) {
-			this.endDate = endDate;
-		}
-		
-		public String toString() {
-			return new StringBuffer("Start: " + startDate.toString() + "; End: " + endDate.toString()).toString();
-		}
-	}
 }
