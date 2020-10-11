@@ -18,7 +18,10 @@ import com.orfco.stoch.Stoch2.data.mapping.TickerCloseDataExtractor;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Repository
+@Slf4j
 public class TickerCloseDAO {
 	private static Logger logger = LoggerFactory.getLogger(TickerCloseDAO.class);
 
@@ -34,6 +37,7 @@ public class TickerCloseDAO {
 		    LocalDate.class);
 	}
 
+	static int testcount = 0;
 	public int[] insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
 		logger.info("insertTickerClosetoDatabase batch insert called.");
 
@@ -41,9 +45,9 @@ public class TickerCloseDAO {
 		// highpricecents, adjclosepricecents, volume, moddatetime
 		return jdbcTemplate.batchUpdate("INSERT INTO CloseData VALUES(null, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)",
 		    new BatchPreparedStatementSetter() {
-
 			    @Override
 			    public void setValues(PreparedStatement ps, int i) throws SQLException {
+						log.info("TestCount: {}", ++testcount);
 				    ps.setString(1, _ticker);
 				    ps.setObject(2, _closeData.get(i).getCloseDate());
 				    ps.setInt(3, _closeData.get(i).getClosePrice());

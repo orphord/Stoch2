@@ -43,13 +43,13 @@ public class TickerCloseData implements Iterable<CloseData> {
 	public String toString() {
 		StringBuffer buf = new StringBuffer("\nTickerClose {")
 				.append("\n\tsymbol: " + ticker)
-				.append("\n\tcloses: [" +
+				.append("\n\tcloses: " +
 						closeData
 						.stream()
 						.sorted(Comparator.comparing(CloseData::getCloseDate))
 						.collect(Collectors.toList())
 						.toString())
-				.append("\n]")
+				.append("\n")
 				.append("\n}");
 		return buf.toString();
 	}

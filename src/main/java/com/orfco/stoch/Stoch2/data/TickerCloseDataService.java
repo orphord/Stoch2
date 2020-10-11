@@ -2,11 +2,14 @@ package com.orfco.stoch.Stoch2.data;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,39 +41,38 @@ public class TickerCloseDataService {
 		epochStart = LocalDate.parse(epochStartStr);
 	}
 
-	public TickerCloseData initiateTickerCloseData(List<String> symbols) throws Exception {
+	public Map<String, TickerCloseData> initiateTickerCloseData(List<String> symbols) throws Exception {
 		log.info("initiateTickerCloseData called.");
 		// 2. check if what earliest date range we need data for form database
-		var symbol = "gs";
-		var latestCloseInDatabase = dao.getLatestForSymbol(symbol);
+		var closeDataBySymbol = new HashMap<String, TickerCloseData>();
+		symbols.stream().forEach(ticker -> {
+			var latestDateForTicker = dao.getLatestForSymbol(ticker);
+			var startEndDates = this.determineStartEndDates(latestDateForTicker);
+			this.doThreadedDataWork(ticker, startEndDates);
+		});
+		symbols.stream().forEach(ticker -> closeDataBySymbol.put(ticker, dao.getTickerCloseData(ticker)));
 
-		// We're talking about dates here to get
-		// 1. create start/end date pairs based on how far back we need to to in history
-		// for symbols
-		var startEndDatePairs = determineStartEndDates(latestCloseInDatabase);
+		return closeDataBySymbol;
 
-		// 2. create number of threads based on number of pairs
-		doThreadedDataWork(symbol, startEndDatePairs);
-
-		// 3. get TickerCloseData from database
-		var tickerCloseData = dao.getTickerCloseData(symbol);
-
-		return tickerCloseData;
 	}
 
-	private void doThreadedDataWork(String _symbol, List<StartEndDatePair> startEndDatePairs)
-			throws Exception {
+	private void doThreadedDataWork(String _symbol, List<StartEndDatePair> startEndDatePairs) {
 		log.info("doThreadedDataWork called.");
 		executorService = Executors.newFixedThreadPool(startEndDatePairs.size());
-		
-		// Mission here is to acquire CloseData within the date range *that we don't already have in the DB*
+
+		// Mission here is to acquire CloseData within the date range *that we don't
+		// already have in the DB*
 		// and add it to the DB
 		var callables = new HashSet<TickerCloseCallable>();
-		startEndDatePairs
-			.stream()
+		startEndDatePairs.stream()
 			.forEach(t -> callables.add(new TickerCloseCallable(_symbol, t.getStartDate(), t.getEndDate())));
 
-		executorService.invokeAll(callables);
+		try {
+			executorService.invokeAll(callables);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		executorService.shutdown();
 	}
 
@@ -93,12 +95,14 @@ public class TickerCloseDataService {
 			return datePairList;
 		}
 
-		// Set the year to be tested each loop to *this* year and loop back to the earliest
-		// year for which we want data -- either the last date for which we already have close
-		// data in the database *or* the beginning of the "epoch" (the longest ago date for which
+		// Set the year to be tested each loop to *this* year and loop back to the
+		// earliest
+		// year for which we want data -- either the last date for which we already have
+		// close
+		// data in the database *or* the beginning of the "epoch" (the longest ago date
+		// for which
 		// we are interested in close data)
-		IntStream
-			.rangeClosed(start.getYear(),today.getYear())
+		IntStream.rangeClosed(start.getYear(), today.getYear())
 			.forEach(year -> {
 				LocalDate yearBeginDate = LocalDate.of(year, 1, 1);
 				LocalDate yearEndDate = LocalDate.of(year, 12, 31);

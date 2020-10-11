@@ -32,8 +32,8 @@ public class StochApplication {
 
 	public static void main(String[] args) throws Exception {
 		var appContext = SpringApplication.run(StochApplication.class, args);
-		var backtester = appContext.getBean(Backtester.class);
-		backtester.run();
+//		var backtester = appContext.getBean(Backtester.class);
+//		backtester.run();
 		log.error("Done.");
 	}
 

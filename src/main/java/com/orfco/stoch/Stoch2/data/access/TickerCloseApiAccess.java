@@ -16,9 +16,11 @@ import com.orfco.stoch.Stoch2.data.mapping.GsonCloseDataAdapter;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Repository
+@Slf4j
 public class TickerCloseApiAccess {
-	private static Logger logger = LoggerFactory.getLogger(TickerCloseApiAccess.class);
 	
 	public List<CloseData> getCloseData(String _symbol, LocalDate startDate, LocalDate endDate)
 			throws IOException {
@@ -31,6 +33,7 @@ public class TickerCloseApiAccess {
 		List<CloseData> closes = new ArrayList<CloseData>();
 		HttpResponse<String> response = null;
 		try {
+			log.info("Getting data from URL: {}", url);
 			response = Unirest.get(url).header("'Content-Type", "application/json").asString();
 
 			GsonBuilder gsonBuilder = new GsonBuilder();
