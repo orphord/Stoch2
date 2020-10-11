@@ -38,6 +38,7 @@ public class TickerCloseDAO {
 	}
 
 	static int testcount = 0;
+
 	public int[] insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
 		logger.info("insertTickerClosetoDatabase batch insert called.");
 
@@ -47,7 +48,7 @@ public class TickerCloseDAO {
 		    new BatchPreparedStatementSetter() {
 			    @Override
 			    public void setValues(PreparedStatement ps, int i) throws SQLException {
-						log.info("TestCount: {}", ++testcount);
+				    log.info("TestCount: {}", ++testcount);
 				    ps.setString(1, _ticker);
 				    ps.setObject(2, _closeData.get(i).getCloseDate());
 				    ps.setInt(3, _closeData.get(i).getClosePrice());
@@ -70,14 +71,15 @@ public class TickerCloseDAO {
 		logger.info("getTickerCloseData called.");
 		var preparedStatementCreator = new PreparedStatementCreator() {
 			String query = "SELECT * from CloseData WHERE ticker = ?";
+
 			public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
 				PreparedStatement prepStatement = connection.prepareStatement(query);
 				prepStatement.setString(1, _symbol);
 				return prepStatement;
 			}
-	};
+		};
 
-		TickerCloseData closeData = jdbcTemplate.query(preparedStatementCreator, new TickerCloseDataExtractor()); 
+		TickerCloseData closeData = jdbcTemplate.query(preparedStatementCreator, new TickerCloseDataExtractor());
 		closeData.setTicker(_symbol);
 		return closeData;
 	}
