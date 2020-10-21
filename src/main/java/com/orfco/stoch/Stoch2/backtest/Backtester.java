@@ -24,7 +24,7 @@ public class Backtester {
 	public void run() throws Exception {
 		log.error("11111ccccccc1111");
 
-		var tickerCloseData = dataService.initiateTickerCloseData(java.util.Arrays.asList("gs"));
+		var tickerCloseData = dataService.getSeveralTickersData(java.util.Arrays.asList("gs"));
 		log.info("TickerCloseData: {}:", tickerCloseData);
 		// 5. Pull data from database
 

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orfco.stoch.Stoch2.data.TickerCloseDataService;
+import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,15 +26,13 @@ public class StochController {
 	}
 	
 	@GetMapping("/{ticker}")
-	public void backtestTicker(@PathVariable String ticker) {
+	public TickerCloseData backtestTicker(@PathVariable String ticker) throws Exception {
 		log.info("Backtest ticker: {}", ticker);
-		try {
-			dataService.initiateTickerCloseData(java.util.Arrays.asList(ticker));
-		} catch (Exception e) {
-			log.error("Exception thrown when initiatingTickerCloseData thing.");
-			e.printStackTrace();
-		}
+		TickerCloseData outCloseData = null;
+		outCloseData = dataService.getSingleTickerData(ticker);
+
 		log.info("=====================");
+		return outCloseData;
 	}
 
 

@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 @Slf4j
 public class TickerCloseDAO {
-	private static Logger logger = LoggerFactory.getLogger(TickerCloseDAO.class);
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -40,37 +39,37 @@ public class TickerCloseDAO {
 	static int testcount = 0;
 
 	public int[] insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
-		logger.info("insertTickerClosetoDatabase batch insert called.");
+		log.info("insertTickerClosetoDatabase batch insert called.");
 
 		// ticker, closedate, closepriceincents, openpriceincents,lowpricecents,
 		// highpricecents, adjclosepricecents, volume, moddatetime
 		return jdbcTemplate.batchUpdate("INSERT INTO CloseData VALUES(null, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)",
-		    new BatchPreparedStatementSetter() {
-			    @Override
-			    public void setValues(PreparedStatement ps, int i) throws SQLException {
-				    log.info("TestCount: {}", ++testcount);
-				    ps.setString(1, _ticker);
-				    ps.setObject(2, _closeData.get(i).getCloseDate());
-				    ps.setInt(3, _closeData.get(i).getClosePrice());
-				    ps.setInt(4, _closeData.get(i).getOpenPrice());
-				    ps.setInt(5, _closeData.get(i).getLowPrice());
-				    ps.setInt(6, _closeData.get(i).getHighPrice());
-				    ps.setInt(7, _closeData.get(i).getAdjustedClose());
-				    ps.setInt(8, _closeData.get(i).getVolume());
-			    }
+				new BatchPreparedStatementSetter() {
+					@Override
+					public void setValues(PreparedStatement ps, int i) throws SQLException {
+						log.info("TestCount: {}", ++testcount);
+						ps.setString(1, _ticker);
+						ps.setObject(2, _closeData.get(i).getCloseDate());
+						ps.setInt(3, _closeData.get(i).getClosePrice());
+						ps.setInt(4, _closeData.get(i).getOpenPrice());
+						ps.setInt(5, _closeData.get(i).getLowPrice());
+						ps.setInt(6, _closeData.get(i).getHighPrice());
+						ps.setInt(7, _closeData.get(i).getAdjustedClose());
+						ps.setInt(8, _closeData.get(i).getVolume());
+					}
 
-			    @Override
-			    public int getBatchSize() {
-				    return _closeData.size();
-			    }
-		    });
+					@Override
+					public int getBatchSize() {
+						return _closeData.size();
+					}
+				});
 
 	}
 
 	public TickerCloseData getTickerCloseData(String _symbol) {
-		logger.info("getTickerCloseData called.");
+		log.info("getTickerCloseData called.");
 		var preparedStatementCreator = new PreparedStatementCreator() {
-			String query = "SELECT * from CloseData WHERE ticker = ?";
+			String query = "SELECT * from CloseData WHERE ticker = ? order by closedate";
 
 			public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
 				PreparedStatement prepStatement = connection.prepareStatement(query);

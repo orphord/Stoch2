@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,21 +35,37 @@ public class TickerCloseDataService {
 
 	@Autowired
 	private TickerCloseApiAccess tickerCloseApi;
+	
+	private Map<String, TickerCloseData> closeDataCache = new HashMap<String, TickerCloseData>();
 
 	private TickerCloseDataService() {
 		epochStart = LocalDate.parse(epochStartStr);
 	}
 
-	public Map<String, TickerCloseData> initiateTickerCloseData(List<String> symbols) throws Exception {
+	public TickerCloseData getSingleTickerData(String symbol) throws Exception {
+		List<String> symbols = List.of(symbol);
+		return getSeveralTickersData(symbols).get(symbol);
+	}
+
+	public Map<String, TickerCloseData> getSeveralTickersData(List<String> symbols) throws Exception {
 		log.info("initiateTickerCloseData called.");
 		// 2. check if what earliest date range we need data for form database
 		var closeDataBySymbol = new HashMap<String, TickerCloseData>();
 		symbols.stream().forEach(ticker -> {
+			if(closeDataCache.containsKey(ticker)
+					&& LocalDate.now().compareTo(closeDataCache.get(ticker).getMostRecentClose()) <= 0)
+			{
+				closeDataBySymbol.put(ticker, closeDataCache.get(ticker));
+				return;
+			}
 			var latestDateForTicker = dao.getLatestForSymbol(ticker);
 			var startEndDates = this.determineStartEndDates(latestDateForTicker);
 			this.doThreadedDataWork(ticker, startEndDates);
+			var closes = dao.getTickerCloseData(ticker);
+			closeDataBySymbol.put(ticker, closes);
+			closeDataCache.put(ticker, closes);
+			
 		});
-		symbols.stream().forEach(ticker -> closeDataBySymbol.put(ticker, dao.getTickerCloseData(ticker)));
 
 		return closeDataBySymbol;
 

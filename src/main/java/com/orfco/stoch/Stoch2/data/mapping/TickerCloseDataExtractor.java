@@ -11,25 +11,32 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class TickerCloseDataExtractor implements ResultSetExtractor<TickerCloseData> {
-	private static Logger logger = LoggerFactory.getLogger(TickerCloseDataExtractor.class);
 
 	@Override
 	public TickerCloseData extractData(ResultSet rs) throws SQLException, DataAccessException {
-		logger.info("TickerCloseDataExtractor.extractData method called.");
+		log.info("TickerCloseDataExtractor.extractData method called.");
 		TickerCloseData tickerCloseData = new TickerCloseData();
 
 		while(rs.next()) {
 			var close = new CloseData();
-			close.setCloseDate(rs.getDate("closedate").toLocalDate());
+			var closeDate = rs.getDate("closedate").toLocalDate();
+			close.setCloseDate(closeDate);
 			close.setClosePrice(rs.getInt("closepricecents"));
 			close.setOpenPrice(rs.getInt("openpricecents"));
 			close.setLowPrice(rs.getInt("lowpricecents"));
 			close.setHighPrice(rs.getInt("highpricecents"));
 			close.setAdjustedClose(rs.getInt("adjclosepricecents"));
 			close.setVolume(rs.getInt("volume"));
+
+			tickerCloseData.setMostRecentClose(
+					(closeDate.compareTo(tickerCloseData.getMostRecentClose()) > 0) ?
+							closeDate
+							: tickerCloseData.getMostRecentClose());
 			tickerCloseData.addCloseData(close);
 			
 		}
