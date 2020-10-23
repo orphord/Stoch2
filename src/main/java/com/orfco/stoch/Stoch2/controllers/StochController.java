@@ -24,15 +24,17 @@ public class StochController {
 		log.info("BaseUrl accessed.");
 		return "values";
 	}
-	
+
+
 	@GetMapping("/{ticker}")
 	public TickerCloseData backtestTicker(@PathVariable String ticker) throws Exception {
 		log.info("Backtest ticker: {}", ticker);
-		TickerCloseData outCloseData = null;
-		outCloseData = dataService.getSingleTickerData(ticker);
+//		TickerCloseData outCloseData = dataService.getSingleTickerData(ticker);
+		int count = dataService.getCount();
 
-		log.info("=====================");
-		return outCloseData;
+		log.info(count + "=====================");
+		return null;
+//		return outCloseData;
 	}
 
 

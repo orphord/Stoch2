@@ -34,7 +34,7 @@ public class StochApplication {
 		var appContext = SpringApplication.run(StochApplication.class, args);
 //		var backtester = appContext.getBean(Backtester.class);
 //		backtester.run();
-		log.error("Done.");
+		log.debug("Done.");
 	}
 
 }

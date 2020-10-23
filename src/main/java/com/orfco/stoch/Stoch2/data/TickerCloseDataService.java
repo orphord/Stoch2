@@ -15,7 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.orfco.stoch.Stoch2.data.access.TickerCloseApiAccess;
-import com.orfco.stoch.Stoch2.data.access.TickerCloseDAO;
+import com.orfco.stoch.Stoch2.data.access.TickerCloseMongoDAO;
+import com.orfco.stoch.Stoch2.data.access.TickerCloseMysqlDAO;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.StartEndDatePair;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
@@ -31,7 +32,8 @@ public class TickerCloseDataService {
 	private LocalDate epochStart;
 
 	@Autowired
-	private TickerCloseDAO dao;
+	private TickerCloseMongoDAO dao;
+//	private TickerCloseMysqlDAO dao;
 
 	@Autowired
 	private TickerCloseApiAccess tickerCloseApi;
@@ -40,6 +42,10 @@ public class TickerCloseDataService {
 
 	private TickerCloseDataService() {
 		epochStart = LocalDate.parse(epochStartStr);
+	}
+
+	public int getCount() {
+		return dao.count();
 	}
 
 	public TickerCloseData getSingleTickerData(String symbol) throws Exception {
