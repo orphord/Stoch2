@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
@@ -24,27 +26,27 @@ public class TickerCloseMongoDAO implements TickerCloseDAO {
 		return (int)mongoTemplate.count(new Query(), "CloseData");
 	}
 
-	public LocalDate getLatestForSymbol(String symbol) {
-		return LocalDate.MIN;
+	public LocalDate getLatestForSymbol(String _symbol) {
+		return this.getTickerCloseData(_symbol).getMostRecentClose();
 	}
 
-	static int testcount = 0;
+	public boolean insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
+		log.info("insertTickerClosetoDatabase batch insert called. " + _ticker + "; " + _closeData);
+		TickerCloseData tickerCloseData = TickerCloseData.build(_ticker, _closeData);
 
-	public int[] insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
-		log.info("insertTickerClosetoDatabase batch insert called.");
+		mongoTemplate.save(tickerCloseData);
 
-		// ticker, closedate, closepriceincents, openpriceincents,lowpricecents,
-		// highpricecents, adjclosepricecents, volume, moddatetime
-		return new int[3];
-
+		return true;
 	}
 
 	public TickerCloseData getTickerCloseData(String _symbol) {
 		log.info("getTickerCloseData called.");
 
-		TickerCloseData closeData = new TickerCloseData();
-		closeData.setTicker(_symbol);
+		Query query = new Query();
+		query.addCriteria(Criteria.where("ticker").is(_symbol)).with(Sort.by(Sort.Direction.ASC,"mostRecentClose"));
+		var closeData = mongoTemplate.find(query, TickerCloseData.class).get(0);
 		return closeData;
 	}
+
 
 }

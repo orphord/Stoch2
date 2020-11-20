@@ -29,12 +29,9 @@ public class StochController {
 	@GetMapping("/{ticker}")
 	public TickerCloseData backtestTicker(@PathVariable String ticker) throws Exception {
 		log.info("Backtest ticker: {}", ticker);
-//		TickerCloseData outCloseData = dataService.getSingleTickerData(ticker);
-		int count = dataService.getCount();
+		var outCloseData = dataService.getSingleTickerData(ticker);
 
-		log.info(count + "=====================");
-		return null;
-//		return outCloseData;
+		return outCloseData;
 	}
 
 

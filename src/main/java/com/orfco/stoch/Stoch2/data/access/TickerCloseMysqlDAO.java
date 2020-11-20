@@ -36,12 +36,12 @@ public class TickerCloseMysqlDAO implements TickerCloseDAO {
 
 	static int testcount = 0;
 
-	public int[] insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
+	public boolean insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
 		log.info("insertTickerClosetoDatabase batch insert called.");
 
 		// ticker, closedate, closepriceincents, openpriceincents,lowpricecents,
 		// highpricecents, adjclosepricecents, volume, moddatetime
-		return jdbcTemplate.batchUpdate("INSERT INTO CloseData VALUES(null, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)",
+		return (jdbcTemplate.batchUpdate("INSERT INTO CloseData VALUES(null, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)",
 				new BatchPreparedStatementSetter() {
 					@Override
 					public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -60,7 +60,7 @@ public class TickerCloseMysqlDAO implements TickerCloseDAO {
 					public int getBatchSize() {
 						return _closeData.size();
 					}
-				});
+				}).length == _closeData.size());
 
 	}
 

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import com.orfco.stoch.Stoch2.data.access.TickerCloseApiAccess;
 import com.orfco.stoch.Stoch2.data.access.TickerCloseMongoDAO;
-import com.orfco.stoch.Stoch2.data.access.TickerCloseMysqlDAO;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.StartEndDatePair;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
@@ -58,18 +57,24 @@ public class TickerCloseDataService {
 		// 2. check if what earliest date range we need data for form database
 		var closeDataBySymbol = new HashMap<String, TickerCloseData>();
 		symbols.stream().forEach(ticker -> {
+			
+			// 1. Get data from cache if available
 			if(closeDataCache.containsKey(ticker)
 					&& LocalDate.now().compareTo(closeDataCache.get(ticker).getMostRecentClose()) <= 0)
 			{
 				closeDataBySymbol.put(ticker, closeDataCache.get(ticker));
-				return;
+				return;  //Note: "return" in this context is returning from the anonymous function 
 			}
+
+			// 2. Get latest date in data store
 			var latestDateForTicker = dao.getLatestForSymbol(ticker);
 			var startEndDates = this.determineStartEndDates(latestDateForTicker);
+
+			// 3. 
 			this.doThreadedDataWork(ticker, startEndDates);
-			var closes = dao.getTickerCloseData(ticker);
-			closeDataBySymbol.put(ticker, closes);
-			closeDataCache.put(ticker, closes);
+			var closeData = dao.getTickerCloseData(ticker);
+			closeDataBySymbol.put(ticker, closeData);
+			closeDataCache.put(ticker, closeData);
 			
 		});
 
@@ -82,10 +87,11 @@ public class TickerCloseDataService {
 		executorService = Executors.newFixedThreadPool(startEndDatePairs.size());
 
 		// Mission here is to acquire CloseData within the date range *that we don't
-		// already have in the DB*
+		// already have in the DB
 		// and add it to the DB
 		var callables = new HashSet<TickerCloseCallable>();
-		startEndDatePairs.stream()
+		startEndDatePairs
+			.stream()
 			.forEach(t -> callables.add(new TickerCloseCallable(_symbol, t.getStartDate(), t.getEndDate())));
 
 		try {
