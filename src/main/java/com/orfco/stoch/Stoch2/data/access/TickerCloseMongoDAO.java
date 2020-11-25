@@ -30,11 +30,9 @@ public class TickerCloseMongoDAO implements TickerCloseDAO {
 		return this.getTickerCloseData(_symbol).getMostRecentClose();
 	}
 
-	public boolean insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
-		log.info("insertTickerClosetoDatabase batch insert called. " + _ticker + "; " + _closeData);
-		TickerCloseData tickerCloseData = TickerCloseData.build(_ticker, _closeData);
-
-		mongoTemplate.save(tickerCloseData);
+	public boolean insertTickerCloseToDatabase(TickerCloseData _tickerCloseData) {
+		log.info("insertTickerClosetoDatabase batch insert called. ");
+		mongoTemplate.save(_tickerCloseData);
 
 		return true;
 	}
@@ -43,10 +41,22 @@ public class TickerCloseMongoDAO implements TickerCloseDAO {
 		log.info("getTickerCloseData called.");
 
 		Query query = new Query();
-		query.addCriteria(Criteria.where("ticker").is(_symbol)).with(Sort.by(Sort.Direction.ASC,"mostRecentClose"));
-		var closeData = mongoTemplate.find(query, TickerCloseData.class).get(0);
+		query.addCriteria(
+				Criteria
+				.where("ticker").is(_symbol))
+				.with(Sort.by(Sort.Direction.ASC,"mostRecentClose")
+		);
+
+		TickerCloseData closeData = null;
+		var savedCloses = mongoTemplate.find(query, TickerCloseData.class);
+		if(!savedCloses.isEmpty())
+			closeData = savedCloses.get(0);
+		else
+			closeData = TickerCloseData.build(_symbol, null);
+
 		return closeData;
 	}
+
 
 
 }

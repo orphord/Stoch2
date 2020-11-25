@@ -36,9 +36,11 @@ public class TickerCloseMysqlDAO implements TickerCloseDAO {
 
 	static int testcount = 0;
 
-	public boolean insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker) {
+	public boolean insertTickerCloseToDatabase(TickerCloseData _tickerCloseData) {
 		log.info("insertTickerClosetoDatabase batch insert called.");
-
+		var closeData = _tickerCloseData.getCloseData();
+		var ticker = _tickerCloseData.getTicker();
+		
 		// ticker, closedate, closepriceincents, openpriceincents,lowpricecents,
 		// highpricecents, adjclosepricecents, volume, moddatetime
 		return (jdbcTemplate.batchUpdate("INSERT INTO CloseData VALUES(null, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)",
@@ -46,21 +48,21 @@ public class TickerCloseMysqlDAO implements TickerCloseDAO {
 					@Override
 					public void setValues(PreparedStatement ps, int i) throws SQLException {
 						log.info("TestCount: {}", ++testcount);
-						ps.setString(1, _ticker);
-						ps.setObject(2, _closeData.get(i).getCloseDate());
-						ps.setInt(3, _closeData.get(i).getClosePrice());
-						ps.setInt(4, _closeData.get(i).getOpenPrice());
-						ps.setInt(5, _closeData.get(i).getLowPrice());
-						ps.setInt(6, _closeData.get(i).getHighPrice());
-						ps.setInt(7, _closeData.get(i).getAdjustedClose());
-						ps.setInt(8, _closeData.get(i).getVolume());
+						ps.setString(1, ticker);
+						ps.setObject(2, closeData.get(i).getCloseDate());
+						ps.setInt(3, closeData.get(i).getClosePrice());
+						ps.setInt(4, closeData.get(i).getOpenPrice());
+						ps.setInt(5, closeData.get(i).getLowPrice());
+						ps.setInt(6, closeData.get(i).getHighPrice());
+						ps.setInt(7, closeData.get(i).getAdjustedClose());
+						ps.setInt(8, closeData.get(i).getVolume());
 					}
 
 					@Override
 					public int getBatchSize() {
-						return _closeData.size();
+						return closeData.size();
 					}
-				}).length == _closeData.size());
+				}).length == closeData.size());
 
 	}
 

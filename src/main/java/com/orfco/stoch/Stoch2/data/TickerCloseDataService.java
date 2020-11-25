@@ -4,14 +4,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.orfco.stoch.Stoch2.data.access.TickerCloseApiAccess;
@@ -27,20 +31,20 @@ import lombok.extern.slf4j.Slf4j;
 public class TickerCloseDataService {
 	private ExecutorService executorService;
 
-	private String epochStartStr = "2019-04-20";
 	private LocalDate epochStart;
 
-	@Autowired
 	private TickerCloseMongoDAO dao;
-//	private TickerCloseMysqlDAO dao;
-
-	@Autowired
 	private TickerCloseApiAccess tickerCloseApi;
 	
 	private Map<String, TickerCloseData> closeDataCache = new HashMap<String, TickerCloseData>();
 
-	private TickerCloseDataService() {
-		epochStart = LocalDate.parse(epochStartStr);
+	@Autowired
+	private TickerCloseDataService(@Value("${epoch.start.str}")String _epochStartStr,
+			TickerCloseMongoDAO _mongoDao,
+			TickerCloseApiAccess _closeApi) {
+		epochStart = LocalDate.parse(_epochStartStr);
+		dao = _mongoDao;
+		tickerCloseApi = _closeApi;
 	}
 
 	public int getCount() {
@@ -54,36 +58,52 @@ public class TickerCloseDataService {
 
 	public Map<String, TickerCloseData> getSeveralTickersData(List<String> symbols) throws Exception {
 		log.info("initiateTickerCloseData called.");
-		// 2. check if what earliest date range we need data for form database
+
 		var closeDataBySymbol = new HashMap<String, TickerCloseData>();
+		// loop thru all tickers
 		symbols.stream().forEach(ticker -> {
-			
+			TickerCloseData tickerCloseData = null;
 			// 1. Get data from cache if available
 			if(closeDataCache.containsKey(ticker)
 					&& LocalDate.now().compareTo(closeDataCache.get(ticker).getMostRecentClose()) <= 0)
 			{
-				closeDataBySymbol.put(ticker, closeDataCache.get(ticker));
-				return;  //Note: "return" in this context is returning from the anonymous function 
+				tickerCloseData = closeDataCache.get(ticker);
 			}
 
-			// 2. Get latest date in data store
-			var latestDateForTicker = dao.getLatestForSymbol(ticker);
+			// 2. Get data from database if it's not in the cache
+			if(tickerCloseData == null)
+				tickerCloseData = dao.getTickerCloseData(ticker);
+
+			// 3. Get latest closeDate from tickerCloseData and define start-end dates for threaded work
+			var latestDateForTicker = tickerCloseData.getMostRecentClose();
 			var startEndDates = this.determineStartEndDates(latestDateForTicker);
 
-			// 3. 
-			this.doThreadedDataWork(ticker, startEndDates);
-			var closeData = dao.getTickerCloseData(ticker);
-			closeDataBySymbol.put(ticker, closeData);
-			closeDataCache.put(ticker, closeData);
-			
+			// 4. Get list of closes for start-end date pairs and add them to the tickerCloseData
+			var closes = this.doThreadedDataWork(ticker, startEndDates);
+			tickerCloseData.addCloseDataList(closes);
+			var tickerCloses = tickerCloseData.getCloseData();
+			var latestClose = tickerCloses.get(tickerCloses.size() - 1);
+			tickerCloseData.setMostRecentClose(latestClose.getCloseDate());
+
+			// 5. Insert TickerCloseData to database
+			dao.insertTickerCloseToDatabase(tickerCloseData);
+
+			// 6. Save that shit to cache and return object
+			closeDataBySymbol.put(ticker, tickerCloseData);
+			closeDataCache.put(ticker, tickerCloseData);
+
 		});
 
 		return closeDataBySymbol;
 
 	}
 
-	private void doThreadedDataWork(String _symbol, List<StartEndDatePair> startEndDatePairs) {
+	private List<CloseData> doThreadedDataWork(String _symbol, List<StartEndDatePair> startEndDatePairs) {
 		log.info("doThreadedDataWork called.");
+
+		if(startEndDatePairs == null)
+			return new LinkedList<CloseData>();
+
 		executorService = Executors.newFixedThreadPool(startEndDatePairs.size());
 
 		// Mission here is to acquire CloseData within the date range *that we don't
@@ -93,19 +113,26 @@ public class TickerCloseDataService {
 		startEndDatePairs
 			.stream()
 			.forEach(t -> callables.add(new TickerCloseCallable(_symbol, t.getStartDate(), t.getEndDate())));
+		var closeDatas = new LinkedList<CloseData>();
 
 		try {
-			executorService.invokeAll(callables);
-		} catch (InterruptedException e) {
+			List<Future<List<CloseData>>> closeDataFutures = executorService.invokeAll(callables);
+			
+			for(Future<List<CloseData>> closeDataFuture: closeDataFutures) {
+				closeDatas.addAll(closeDataFuture.get());
+			}
+		} catch (InterruptedException | ExecutionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		executorService.shutdown();
+
+		return closeDatas;
 	}
 
 	private List<StartEndDatePair> determineStartEndDates(LocalDate latestCloseInDatabase) {
 		log.info("determineStartEndDates called.");
-		var start = latestCloseInDatabase == null ? epochStart : latestCloseInDatabase;
+		var start = latestCloseInDatabase == LocalDate.MIN ? epochStart : latestCloseInDatabase;
 		var today = LocalDate.now();
 
 		var datePairList = new ArrayList<StartEndDatePair>();
@@ -159,7 +186,7 @@ public class TickerCloseDataService {
 		public List<CloseData> call() throws Exception {
 			log.info("thread to get and insert to database.");
 			var closeData = tickerCloseApi.getCloseData(symbol, startDate, endDate);
-			dao.insertTickerCloseToDatabase(closeData, symbol);
+
 			return closeData;
 		}
 	}

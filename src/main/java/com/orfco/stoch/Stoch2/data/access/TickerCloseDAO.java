@@ -8,7 +8,7 @@ import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
 public interface TickerCloseDAO {
 	public int count();
-	public LocalDate getLatestForSymbol(String symbol);
-	public boolean insertTickerCloseToDatabase(List<CloseData> _closeData, String _ticker);
+	public LocalDate getLatestForSymbol(String _symbol);
+	public boolean insertTickerCloseToDatabase(TickerCloseData _tickerCloseData);
 	public TickerCloseData getTickerCloseData(String _symbol);
 }
