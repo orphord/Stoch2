@@ -1,7 +1,8 @@
-package com.orfco.stoch.Stoch2.data;
+package com.orfco.stoch.Stoch2.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -12,14 +13,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.orfco.stoch.Stoch2.data.access.TickerCloseApiAccess;
-import com.orfco.stoch.Stoch2.data.access.TickerCloseMongoDAO;
+import com.orfco.stoch.Stoch2.data.TickerCloseApiAccess;
+import com.orfco.stoch.Stoch2.data.TickerCloseMongoDAO;
 import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.StartEndDatePair;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
@@ -79,7 +81,10 @@ public class TickerCloseDataService {
 			var startEndDates = this.determineStartEndDates(latestDateForTicker);
 
 			// 4. Get list of closes for start-end date pairs and add them to the tickerCloseData
-			var closes = this.doThreadedDataWork(ticker, startEndDates);
+			var closes = this.doThreadedDataWork(ticker, startEndDates)
+					.stream()
+					.sorted(Comparator.comparing(CloseData::getCloseDate))
+					.collect(Collectors.toList());
 			tickerCloseData.addCloseDataList(closes);
 			var tickerCloses = tickerCloseData.getCloseData();
 			var latestClose = tickerCloses.get(tickerCloses.size() - 1);

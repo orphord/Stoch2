@@ -1,4 +1,4 @@
-package com.orfco.stoch.Stoch2.data.access;
+package com.orfco.stoch.Stoch2.data;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;

@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.orfco.stoch.Stoch2.data.TickerCloseDataService;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
+import com.orfco.stoch.Stoch2.service.TickerCloseDataService;
 
 import lombok.extern.slf4j.Slf4j;
 

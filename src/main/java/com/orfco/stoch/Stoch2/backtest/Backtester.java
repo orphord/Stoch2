@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.orfco.stoch.Stoch2.data.TickerCloseDataService;
+import com.orfco.stoch.Stoch2.service.TickerCloseDataService;
 
 import lombok.extern.slf4j.Slf4j;
 

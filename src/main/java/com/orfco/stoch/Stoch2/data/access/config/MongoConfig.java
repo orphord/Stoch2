@@ -13,7 +13,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 
 @Configuration
-@EnableMongoRepositories("com.orfco.stoch.Stoch2.data.access")
+@EnableMongoRepositories("com.orfco.stoch.Stoch2.service.access")
 public class MongoConfig extends AbstractMongoClientConfiguration {
 	@Value("${spring.data.mongodb.uri}")
 	String mongoUri;

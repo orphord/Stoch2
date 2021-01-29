@@ -1,4 +1,4 @@
-package com.orfco.stoch.Stoch2.data.access;
+package com.orfco.stoch.Stoch2.data;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

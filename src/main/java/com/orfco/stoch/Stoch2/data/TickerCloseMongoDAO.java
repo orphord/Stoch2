@@ -1,16 +1,13 @@
-package com.orfco.stoch.Stoch2.data.access;
+package com.orfco.stoch.Stoch2.data;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
-import com.orfco.stoch.Stoch2.model.CloseData;
 import com.orfco.stoch.Stoch2.model.TickerCloseData;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +40,7 @@ public class TickerCloseMongoDAO implements TickerCloseDAO {
 		Query query = new Query();
 		query.addCriteria(
 				Criteria
-				.where("ticker").is(_symbol))
-				.with(Sort.by(Sort.Direction.ASC,"mostRecentClose")
+				.where("ticker").is(_symbol)
 		);
 
 		TickerCloseData closeData = null;

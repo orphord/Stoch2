@@ -31,7 +31,7 @@ public class TickerCloseData {
 		tickerCloses.setCloseData(
 				Optional.ofNullable(_closeData).map(Collection::stream).orElseGet(Stream::empty)
 				.sorted(Comparator.comparing(CloseData::getCloseDate))
-			.collect(Collectors.toList()) );
+				.collect(Collectors.toList()) );
 
 		int numCloses = tickerCloses.getCloseData().size();
 		if (numCloses > 0) 
