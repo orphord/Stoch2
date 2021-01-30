@@ -1,4 +1,4 @@
-package com.orfco.stoch.Stoch2.data.access.config;
+package com.orfco.stoch.Stoch2.data.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
